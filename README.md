@@ -222,8 +222,13 @@ Deleted: sha256:3478a94ee1601c26d7f5c8ff32ed1210dcdec6bd131e19ce6d548c53f89a73a2
 
 ### イメージからコンテナを実行（ run = （ pull ） + create + start ）
 
+実行中のコンテナから抜ける場合
+
+- exit ...コンテナを終了
+- Ctrl + p , Ctrl + q ...デタッチ
+
 ```bash
-$ docker run -it --name mydebian debian:latest /bin/bash
+$ docker run -it --name mydebian --rm debian:latest /bin/bash
 ```
 
 <details>
@@ -241,6 +246,51 @@ root@b86e36d48765:/# exit
 exit
 y@HOSTMACHINE:~$ cat /etc/os-release | grep VERSION=
 VERSION="20.04.2 LTS (Focal Fossa)"
+```
+
+</details>
+
+<br><br>
+
+#### アタッチ・デタッチ
+
+<details>
+    <summary>Results</summary>
+
+```bash
+# コンテナを起動
+$ docker run -it --name mydebian debian:latest /bin/bash
+
+# デタッチ
+root@2c2a9ef0c999:/# (Ctrl + p , Ctrl + q)
+
+# コンテナの外からコマンドを実行
+$ docker exec mydebian whoami
+root
+
+# アタッチ
+$ docker attach mydebian
+
+# コンテナを停止し削除
+$ docker stop mydebian
+$ docker rm mydebian
+```
+
+</details>
+
+<br><br>
+
+#### バックグラウンド実行（ -d ）・ポート転送（ -p ）・ボリューム（ -v ）
+
+<details>
+    <summary>Results</summary>
+
+```bash
+$ echo "Hi!" > index.html
+$ docker run -it --rm -d -p 8080:80 --name web -v $PWD/index.html:/usr/share/nginx/html/index.html nginx
+
+$ docker stop web
+$ docker rm web
 ```
 
 </details>
