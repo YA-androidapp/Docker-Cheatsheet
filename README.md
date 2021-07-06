@@ -286,16 +286,57 @@ $ docker rm mydebian
     <summary>Results</summary>
 
 ```bash
-$ echo "Hi!" > index.html
-$ docker run -it --rm -d -p 8080:80 --name web -v $PWD/index.html:/usr/share/nginx/html/index.html nginx
+$ echo "Hi!" > docker/nginx/index.html
+$ docker run -it --rm -d -p 8080:80 --name web -v $PWD/docker/nginx/index.html:/usr/share/nginx/html/index.html nginx
 
 $ docker stop web
-$ docker rm web
 ```
 
 </details>
 
 <br><br>
+
+## Dockerfile をもとにコンテナを実行
+
+```bash
+$ echo "Hi!" > docker/nginx/index.html
+$ cat - << EOF > docker/nginx/Dockerfile
+FROM ubuntu
+LABEL maintainer="yaand <ya.androidapp@gmail.com>" \
+      org.opencontainers.image.authors="yaand <ya.androidapp@gmail.com>" \
+      org.opencontainers.image.url="https://github.com/YA-androidapp/Docker-Cheatsheet" \
+      org.opencontainers.image.documentation="https://github.com/YA-androidapp/Docker-Cheatsheet" \
+      org.opencontainers.image.source="https://github.com/YA-androidapp/Docker-Cheatsheet/blob/main/Dockerfile" \
+      org.opencontainers.image.version="1.0.0"
+
+ENV DB_HOST="db" \
+    DB_PORT="3306"
+
+RUN echo $DB_HOST $DB_PORT
+
+ARG DEBUG=True
+RUN echo $DEBUG
+
+RUN apt-get update && apt-get install -y nginx
+ADD index.html /var/www/html/
+EXPOSE 80
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+EOF
+
+$ docker build -t myweb:latest --build-arg DEBUG=False docker/nginx/
+$ docker run -d -p 8080:80 --name myweb myweb:latest
+$ docker ps
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                  NAMES
+3d4df3994a87        myweb:latest        "nginx -g 'daemon of…"   2 minutes ago       Up 2 minutes        0.0.0.0:8080->80/tcp   myweb
+```
+
+</details>
 
 ---
 
