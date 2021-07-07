@@ -31,6 +31,9 @@ Docker コマンド・Docker Compose コマンド
   - [Dockerfile をもとにコンテナを実行](#dockerfile-をもとにコンテナを実行)
     - [Dockerfile からビルド](#dockerfile-からビルド)
   - [実行中のコンテナに変更を加えてプッシュする](#実行中のコンテナに変更を加えてプッシュする)
+  - [コンテナの情報を確認](#コンテナの情報を確認)
+    - [条件でフィルタリング](#条件でフィルタリング-2)
+    - [出力をフォーマット](#出力をフォーマット-1)
 
 <!-- /TOC -->
 
@@ -474,8 +477,104 @@ yaand/mydeb2        1.0                 36d96b596a9c        8 minutes ago       
 # Docker Hub にプッシュする
 $ docker login
 $ docker push yaand/mydeb:latest
+```
+
+<br><br>
+
+<a id="markdown-コンテナの情報を確認" name="コンテナの情報を確認"></a>
+
+## コンテナの情報を確認
+
+```bash
+$ docker run -it -d --rm --name mydebian debian:latest
+$ docker run -it --name mydebian2 debian:latest
+root@26c3e16c970e:/# exit
+exit
+
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+c44ebce078ea        debian:latest       "bash"              52 seconds ago      Up 50 seconds                           mydebian
+
+# すべてのコンテナを出力
+$ docker ps -a
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                      PORTS               NAMES
+26c3e16c970e        debian:latest       "bash"              19 seconds ago      Exited (0) 16 seconds ago                       mydebian2
+c44ebce078ea        debian:latest       "bash"              55 seconds ago      Up 53 seconds                                   mydebian
+
+# コンテナIDのみ出力
+$ docker ps -q
+c44ebce078ea
+```
+
+<br><br>
+
+<a id="markdown-条件でフィルタリング-2" name="条件でフィルタリング-2"></a>
+
+### 条件でフィルタリング
+
+| 項目                                                  | 説明                                           |
+| ----------------------------------------------------- | ---------------------------------------------- |
+| id=\<ID\>                                             | コンテナ ID                                    |
+| label=\<key\> or label=\<key\>=\<value\>              | ラベル                                         |
+| name=\<文字列\>                                       | コンテナ名                                     |
+| exited=\<整数\>                                       | 終了コードを <整数> で指定                     |
+| status                                                | created, restarting, running, paused or exited |
+| ancestor                                              | 特定のイメージや子孫から作成されたコンテナ     |
+| before                                                | 指定したコンテナよりも前に作成したコンテナ     |
+| since                                                 | 指定したコンテナよりも後に作成したコンテナ     |
+| volume=\(\<ボリューム名\> or \<マウント・ポイント\>\) | コンテナがマウントしているボリューム           |
+| network=\(\<ネットワーク ID\> or \<ネットワーク名\>\) | コンテナが接続しているネットワーク             |
+
+```bash
+$ docker ps -a --filter 'exited=0' --filter 'name=mydebian2'
+```
+
+<details>
+    <summary>Results</summary>
 
 ```
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                     PORTS               NAMES
+26c3e16c970e        debian:latest       "bash"              9 minutes ago       Exited (0) 9 minutes ago                       mydebian2
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-出力をフォーマット-1" name="出力をフォーマット-1"></a>
+
+### 出力をフォーマット
+
+| プレースホルダ | 説明                                     |
+| -------------- | ---------------------------------------- |
+| .ID            | コンテナ ID                              |
+| .Image         | イメージ ID                              |
+| .Command       | クォートされたコマンド                   |
+| .CreatedAt     | コンテナが作成された時間                 |
+| .RunningFor    | コンテナが起動してからの時間             |
+| .Ports         | 公開しているポート                       |
+| .Status        | コンテナのステータス                     |
+| .Size          | コンテナのディスク容量                   |
+| .Names         | コンテナ名                               |
+| .Labels        | コンテナに割り当てられている全てのラベル |
+| .Label         | コンテナに割り当てられた特定のラベル     |
+
+```bash
+$ docker ps -a --format "table {{.Names}} {{.Status}}"
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+NAMES STATUS
+mydebian2 Exited (0) 17 minutes ago
+mydebian Up 17 minutes
+```
+
+</details>
+
+<br><br>
 
 ---
 
