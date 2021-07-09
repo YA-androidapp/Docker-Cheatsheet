@@ -1,5 +1,5 @@
-
 <a id="markdown-docker-cheatsheet" name="docker-cheatsheet"></a>
+
 # Docker-Cheatsheet
 
 Docker コマンド・Docker Compose コマンド
@@ -11,50 +11,50 @@ Docker コマンド・Docker Compose コマンド
 <!-- TOC -->
 
 - [Docker-Cheatsheet](#docker-cheatsheet)
-    - [バージョン確認](#バージョン確認)
-    - [レジストリ（Docker Hub、ACR、ECR）に公開されているイメージをもとにコンテナを実行](#レジストリdocker-hubacrecrに公開されているイメージをもとにコンテナを実行)
-        - [イメージを検索](#イメージを検索)
-            - [件数を制限（既定値は 25 件）](#件数を制限既定値は-25-件)
-            - [条件でフィルタリング](#条件でフィルタリング)
-        - [イメージを取得](#イメージを取得)
-        - [ローカルにあるイメージを一覧表示](#ローカルにあるイメージを一覧表示)
-            - [出力をフォーマット](#出力をフォーマット)
-            - [条件でフィルタリング](#条件でフィルタリング-1)
-        - [イメージにタグ付け（名前を変える）](#イメージにタグ付け名前を変える)
-        - [イメージからコンテナを実行（ run = （ pull ） + create + start ）](#イメージからコンテナを実行-run---pull---create--start-)
-            - [アタッチ・デタッチ](#アタッチ・デタッチ)
-            - [オプション](#オプション)
-                - [バックグラウンド実行（ -d ）・ポート転送（ -p ）・ボリューム（ -v ）](#バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-)
-        - [ローカルにあるイメージを削除](#ローカルにあるイメージを削除)
-            - [使用していないイメージを削除](#使用していないイメージを削除)
-        - [ローカルにあるコンテナを削除](#ローカルにあるコンテナを削除)
-            - [使用していないコンテナを削除](#使用していないコンテナを削除)
-    - [Dockerfile をもとにコンテナを実行](#dockerfile-をもとにコンテナを実行)
-        - [Dockerfile からビルド](#dockerfile-からビルド)
-    - [実行中のコンテナに変更を加えてプッシュ](#実行中のコンテナに変更を加えてプッシュ)
-    - [バックアップ・リストア](#バックアップ・リストア)
-        - [save・load](#save・load)
-        - [export・import](#export・import)
-    - [状態を確認](#状態を確認)
-        - [ホストの状態を確認](#ホストの状態を確認)
-        - [イベントを確認](#イベントを確認)
-        - [コンテナの状態を確認](#コンテナの状態を確認)
-            - [コンテナの情報を確認](#コンテナの情報を確認)
-                - [条件でフィルタリング](#条件でフィルタリング-2)
-                - [出力をフォーマット](#出力をフォーマット-1)
-            - [詳細情報を確認](#詳細情報を確認)
-            - [コンテナのリソース使用状況を確認](#コンテナのリソース使用状況を確認)
-            - [コンテナのプロセス一覧を確認](#コンテナのプロセス一覧を確認)
-            - [コンテナのログを確認](#コンテナのログを確認)
-            - [ポート情報を確認](#ポート情報を確認)
-    - [参考文献](#参考文献)
+  - [バージョン確認](#バージョン確認)
+  - [レジストリ（Docker Hub、ACR、ECR）に公開されているイメージをもとにコンテナを実行](#レジストリdocker-hubacrecrに公開されているイメージをもとにコンテナを実行)
+    - [イメージを検索](#イメージを検索)
+      - [件数を制限（既定値は 25 件）](#件数を制限既定値は-25-件)
+      - [条件でフィルタリング](#条件でフィルタリング)
+    - [イメージを取得](#イメージを取得)
+    - [ローカルにあるイメージを一覧表示](#ローカルにあるイメージを一覧表示)
+      - [出力をフォーマット](#出力をフォーマット)
+      - [条件でフィルタリング](#条件でフィルタリング-1)
+    - [イメージにタグ付け（名前を変える）](#イメージにタグ付け名前を変える)
+    - [イメージからコンテナを実行（ run = （ pull ） + create + start ）](#イメージからコンテナを実行-run---pull---create--start-)
+      - [アタッチ・デタッチ](#アタッチ・デタッチ)
+      - [バックグラウンド実行（ -d ）・ポート転送（ -p ）・ボリューム（ -v ）](#バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-)
+      - [その他のオプション](#その他のオプション)
+    - [ローカルにあるイメージを削除](#ローカルにあるイメージを削除)
+      - [使用していないイメージを削除](#使用していないイメージを削除)
+    - [ローカルにあるコンテナを削除](#ローカルにあるコンテナを削除)
+      - [使用していないコンテナを削除](#使用していないコンテナを削除)
+  - [Dockerfile をもとにコンテナを実行](#dockerfile-をもとにコンテナを実行)
+    - [Dockerfile からビルド](#dockerfile-からビルド)
+  - [実行中のコンテナに変更を加えてプッシュ](#実行中のコンテナに変更を加えてプッシュ)
+  - [バックアップ・リストア](#バックアップ・リストア)
+    - [save・load](#save・load)
+    - [export・import](#export・import)
+  - [状態を確認](#状態を確認)
+    - [ホストの状態を確認](#ホストの状態を確認)
+    - [イベントを確認](#イベントを確認)
+    - [コンテナの状態を確認](#コンテナの状態を確認)
+      - [コンテナの情報を確認](#コンテナの情報を確認)
+        - [条件でフィルタリング](#条件でフィルタリング-2)
+        - [出力をフォーマット](#出力をフォーマット-1)
+      - [詳細情報を確認](#詳細情報を確認)
+      - [コンテナのリソース使用状況を確認](#コンテナのリソース使用状況を確認)
+      - [コンテナのプロセス一覧を確認](#コンテナのプロセス一覧を確認)
+      - [コンテナのログを確認](#コンテナのログを確認)
+      - [ポート情報を確認](#ポート情報を確認)
+  - [参考文献](#参考文献)
 
 <!-- /TOC -->
 
 <br><br>
 
-
 <a id="markdown-バージョン確認" name="バージョン確認"></a>
+
 ## バージョン確認
 
 ```bash
@@ -64,16 +64,16 @@ $ docker-compose version
 
 <br><br>
 
-
 <a id="markdown-レジストリdocker-hubacrecrに公開されているイメージをもとにコンテナを実行" name="レジストリdocker-hubacrecrに公開されているイメージをもとにコンテナを実行"></a>
+
 ## レジストリ（Docker Hub、ACR、ECR）に公開されているイメージをもとにコンテナを実行
 
-
 <a id="markdown-イメージを検索" name="イメージを検索"></a>
+
 ### イメージを検索
 
-
 <a id="markdown-件数を制限既定値は-25-件" name="件数を制限既定値は-25-件"></a>
+
 #### 件数を制限（既定値は 25 件）
 
 ```bash
@@ -101,8 +101,8 @@ ubuntu-debootstrap                                        debootstrap --variant=
 
 <br><br>
 
-
 <a id="markdown-条件でフィルタリング" name="条件でフィルタリング"></a>
+
 #### 条件でフィルタリング
 
 ```bash
@@ -121,8 +121,8 @@ ubuntu              Ubuntu is a Debian-based Linux operating sys…   12466     
 
 <br><br>
 
-
 <a id="markdown-イメージを取得" name="イメージを取得"></a>
+
 ### イメージを取得
 
 ```bash
@@ -144,8 +144,8 @@ docker.io/library/ubuntu:latest
 
 <br><br>
 
-
 <a id="markdown-ローカルにあるイメージを一覧表示" name="ローカルにあるイメージを一覧表示"></a>
+
 ### ローカルにあるイメージを一覧表示
 
 ```bash
@@ -164,8 +164,8 @@ ubuntu              latest              9873176a8ff5        2 weeks ago         
 
 <br><br>
 
-
 <a id="markdown-出力をフォーマット" name="出力をフォーマット"></a>
+
 #### 出力をフォーマット
 
 | プレースホルダ | 説明                             |
@@ -198,8 +198,8 @@ IMAGE ID            REPOSITORY
 
 <br><br>
 
-
 <a id="markdown-条件でフィルタリング-1" name="条件でフィルタリング-1"></a>
+
 #### 条件でフィルタリング
 
 ```bash
@@ -230,8 +230,8 @@ docker-laravel-ui_db    latest              f445a8e4907b        2 months ago    
 
 <br><br>
 
-
 <a id="markdown-イメージにタグ付け名前を変える" name="イメージにタグ付け名前を変える"></a>
+
 ### イメージにタグ付け（名前を変える）
 
 ```bash
@@ -251,8 +251,8 @@ myubuntu            1.0                 9873176a8ff5        2 weeks ago         
 
 <br><br>
 
-
 <a id="markdown-イメージからコンテナを実行-run---pull---create--start-" name="イメージからコンテナを実行-run---pull---create--start-"></a>
+
 ### イメージからコンテナを実行（ run = （ pull ） + create + start ）
 
 実行中のコンテナから抜ける場合
@@ -285,8 +285,8 @@ VERSION="20.04.2 LTS (Focal Fossa)"
 
 <br><br>
 
-
 <a id="markdown-アタッチ・デタッチ" name="アタッチ・デタッチ"></a>
+
 #### アタッチ・デタッチ
 
 <details>
@@ -306,6 +306,9 @@ root
 # アタッチ
 $ docker attach mydebian
 
+# デタッチ
+root@2c2a9ef0c999:/# (Ctrl + p , Ctrl + q)
+
 # コンテナを停止し削除
 $ docker stop mydebian
 $ docker rm mydebian
@@ -315,9 +318,26 @@ $ docker rm mydebian
 
 <br><br>
 
+<a id="markdown-バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-" name="バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-"></a>
 
-<a id="markdown-オプション" name="オプション"></a>
-#### オプション
+#### バックグラウンド実行（ -d ）・ポート転送（ -p ）・ボリューム（ -v ）
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+$ echo "Hi!" > docker/nginx/index.html
+$ docker run -it --rm -d -p 8080:80 --name web -v $PWD/docker/nginx/index.html:/usr/share/nginx/html/index.html nginx
+
+$ docker stop web
+```
+
+</details>
+<br><br>
+
+<a id="markdown-その他のオプション" name="その他のオプション"></a>
+
+#### その他のオプション
 
 <details>
     <summary>Options</summary>
@@ -421,26 +441,8 @@ $ docker rm mydebian
 
 <br><br>
 
-
-<a id="markdown-バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-" name="バックグラウンド実行--d-・ポート転送--p-・ボリューム--v-"></a>
-##### バックグラウンド実行（ -d ）・ポート転送（ -p ）・ボリューム（ -v ）
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-$ echo "Hi!" > docker/nginx/index.html
-$ docker run -it --rm -d -p 8080:80 --name web -v $PWD/docker/nginx/index.html:/usr/share/nginx/html/index.html nginx
-
-$ docker stop web
-```
-
-</details>
-
-<br><br>
-
-
 <a id="markdown-ローカルにあるイメージを削除" name="ローカルにあるイメージを削除"></a>
+
 ### ローカルにあるイメージを削除
 
 ```bash
@@ -458,8 +460,8 @@ Untagged: myubuntu:1.0
 
 <br><br>
 
-
 <a id="markdown-使用していないイメージを削除" name="使用していないイメージを削除"></a>
+
 #### 使用していないイメージを削除
 
 ```bash
@@ -479,8 +481,8 @@ Deleted: sha256:3478a94ee1601c26d7f5c8ff32ed1210dcdec6bd131e19ce6d548c53f89a73a2
 
 <br><br>
 
-
 <a id="markdown-ローカルにあるコンテナを削除" name="ローカルにあるコンテナを削除"></a>
+
 ### ローカルにあるコンテナを削除
 
 ```bash
@@ -493,8 +495,8 @@ $ docker rm mydebian
 
 <br><br>
 
-
 <a id="markdown-使用していないコンテナを削除" name="使用していないコンテナを削除"></a>
+
 #### 使用していないコンテナを削除
 
 ```bash
@@ -503,12 +505,12 @@ $ docker rm $(docker ps -aqf "status=exited")
 
 <br><br>
 
-
 <a id="markdown-dockerfile-をもとにコンテナを実行" name="dockerfile-をもとにコンテナを実行"></a>
+
 ## Dockerfile をもとにコンテナを実行
 
-
 <a id="markdown-dockerfile-からビルド" name="dockerfile-からビルド"></a>
+
 ### Dockerfile からビルド
 
 <details>
@@ -564,8 +566,8 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 <br><br>
 
-
 <a id="markdown-実行中のコンテナに変更を加えてプッシュ" name="実行中のコンテナに変更を加えてプッシュ"></a>
+
 ## 実行中のコンテナに変更を加えてプッシュ
 
 ```bash
@@ -614,8 +616,8 @@ $ docker push yaand/mydeb:latest
 
 <br><br>
 
-
 <a id="markdown-バックアップ・リストア" name="バックアップ・リストア"></a>
+
 ## バックアップ・リストア
 
 - save ... 1 つまたは複数の **イメージ** を tar アーカイブとして保存
@@ -623,8 +625,8 @@ $ docker push yaand/mydeb:latest
 
 <br>
 
-
 <a id="markdown-save・load" name="save・load"></a>
+
 ### save・load
 
 <details>
@@ -644,8 +646,8 @@ Loaded image: mydebian:latest
 
 <br><br>
 
-
 <a id="markdown-export・import" name="export・import"></a>
+
 ### export・import
 
 <details>
@@ -668,12 +670,12 @@ root@f21cebc04d0a:/# ls -la *.txt
 
 <br><br>
 
-
 <a id="markdown-状態を確認" name="状態を確認"></a>
+
 ## 状態を確認
 
-
 <a id="markdown-ホストの状態を確認" name="ホストの状態を確認"></a>
+
 ### ホストの状態を確認
 
 ```bash
@@ -699,8 +701,8 @@ Server:
 
 <br><br>
 
-
 <a id="markdown-イベントを確認" name="イベントを確認"></a>
+
 ### イベントを確認
 
 ```bash
@@ -709,12 +711,12 @@ $ docker events
 
 <br><br>
 
-
 <a id="markdown-コンテナの状態を確認" name="コンテナの状態を確認"></a>
+
 ### コンテナの状態を確認
 
-
 <a id="markdown-コンテナの情報を確認" name="コンテナの情報を確認"></a>
+
 #### コンテナの情報を確認
 
 ```bash
@@ -748,8 +750,8 @@ c44ebce078ea
 
 <br><br>
 
-
 <a id="markdown-条件でフィルタリング-2" name="条件でフィルタリング-2"></a>
+
 ##### 条件でフィルタリング
 
 | 項目                                                  | 説明                                           |
@@ -781,8 +783,8 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 <br><br>
 
-
 <a id="markdown-出力をフォーマット-1" name="出力をフォーマット-1"></a>
+
 ##### 出力をフォーマット
 
 | プレースホルダ | 説明                                     |
@@ -816,8 +818,8 @@ mydebian Up 17 minutes
 
 <br><br>
 
-
 <a id="markdown-詳細情報を確認" name="詳細情報を確認"></a>
+
 #### 詳細情報を確認
 
 ```bash
@@ -865,8 +867,8 @@ running
 
 <br><br>
 
-
 <a id="markdown-コンテナのリソース使用状況を確認" name="コンテナのリソース使用状況を確認"></a>
+
 #### コンテナのリソース使用状況を確認
 
 ```bash
@@ -886,8 +888,8 @@ c44ebce078ea        mydebian            0.00%               1.195MiB / 12.39GiB 
 
 <br><br>
 
-
 <a id="markdown-コンテナのプロセス一覧を確認" name="コンテナのプロセス一覧を確認"></a>
+
 #### コンテナのプロセス一覧を確認
 
 ```bash
@@ -906,8 +908,8 @@ PID                 USER                TIME                COMMAND
 
 <br><br>
 
-
 <a id="markdown-コンテナのログを確認" name="コンテナのログを確認"></a>
+
 #### コンテナのログを確認
 
 ```bash
@@ -923,8 +925,8 @@ $ docker logs --details -f --since="2021-07-07T01:23:45.6789+09:00" mydebian
 
 <br><br>
 
-
 <a id="markdown-ポート情報を確認" name="ポート情報を確認"></a>
+
 #### ポート情報を確認
 
 ```bash
@@ -945,8 +947,8 @@ $ docker port mynginx 80
 
 ---
 
-
 <a id="markdown-参考文献" name="参考文献"></a>
+
 ## 参考文献
 
 - https://docs.docker.jp/index.html
