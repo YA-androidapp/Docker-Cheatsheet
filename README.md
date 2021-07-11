@@ -35,6 +35,8 @@ Docker コマンド・Docker Compose コマンド
   - [バックアップ・リストア](#バックアップ・リストア)
     - [save・load](#save・load)
     - [export・import](#export・import)
+  - [ボリューム](#ボリューム)
+  - [ネットワーク](#ネットワーク)
   - [状態を確認](#状態を確認)
     - [ホストの状態を確認](#ホストの状態を確認)
     - [イベントを確認](#イベントを確認)
@@ -47,6 +49,7 @@ Docker コマンド・Docker Compose コマンド
       - [コンテナのプロセス一覧を確認](#コンテナのプロセス一覧を確認)
       - [コンテナのログを確認](#コンテナのログを確認)
       - [ポート情報を確認](#ポート情報を確認)
+  - [後片付け](#後片付け)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -327,6 +330,8 @@ $ docker rm mydebian
 
 ```bash
 $ echo "Hi!" > docker/nginx/index.html
+
+# -d と --rm オプションを両方指定すると、コンテナ終了またはデーモン終了のどちらかが先に発生したらコンテナが削除される
 $ docker run -it --rm -d -p 8080:80 --name web -v $PWD/docker/nginx/index.html:/usr/share/nginx/html/index.html nginx
 
 $ docker stop web
@@ -486,11 +491,18 @@ Deleted: sha256:3478a94ee1601c26d7f5c8ff32ed1210dcdec6bd131e19ce6d548c53f89a73a2
 ### ローカルにあるコンテナを削除
 
 ```bash
+# コンテナを確認
 $ docker ps -a
 
+# コンテナを停止
 $ docker stop mydebian
+# 強制終了する場合
+$ docker kill mydebian
 
+# コンテナを削除
 $ docker rm mydebian
+# 実行中のコンテナを削除
+$ docker rm -f mydebian
 ```
 
 <br><br>
@@ -667,6 +679,123 @@ root@f21cebc04d0a:/# ls -la *.txt
 ```
 
 </details>
+
+<br><br>
+
+<a id="markdown-ボリューム" name="ボリューム"></a>
+
+## ボリューム
+
+```bash
+# ボリュームを作成
+$ docker volume create myvolume
+$ docker volume ls
+$ docker volume inspect myvolume
+
+# ボリュームを指定してコンテナを起動
+$ docker run -it --rm -v myvolume:/opt --name mydebian debian:latest
+
+ボリュームを削除
+$ docker volume rm myvolume
+```
+
+<br><br>
+
+<a id="markdown-ネットワーク" name="ネットワーク"></a>
+
+## ネットワーク
+
+```bash
+# ネットワークを作成
+$ docker network create -d bridge --gateway=192.168.0.1 --subnet=192.168.0.0/16 mynetwork
+$ docker network ls
+$ docker network inspect mynetwork
+```
+
+```bash
+# ネットワークを指定してコンテナを起動
+$ docker run --net mynetwork --ip 192.168.0.2 --entrypoint /bin/bash --rm debian -c "ip a"
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0
+22: eth0@if23: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:c0:a8:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.0.2/16 brd 192.168.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+</details>
+
+<br>
+
+```bash
+# コンテナをネットワークに接続
+$ docker run -it -d --name mydebian debian:latest
+$ docker network connect mynetwork mydebian
+$ docker attach mydebian
+root@edace4b122e1:/# ip a
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0
+27: eth0@if28: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+29: eth1@if30: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:c0:a8:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.0.2/16 brd 192.168.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+```
+
+</details>
+
+```bash
+root@edace4b122e1:/# (Ctrl + p , Ctrl + q)
+# コンテナをネットワークから切断
+$ docker network disconnect mynetwork mydebian
+$ docker exec mydebian ip a
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0
+27: eth0@if28: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+</details>
+
+```bash
+# ネットワークを削除
+$ docker network rm mynetwork
+```
 
 <br><br>
 
@@ -942,6 +1071,29 @@ $ docker port mynginx 80
 ```
 
 </details>
+
+<br><br>
+
+<a id="markdown-後片付け" name="後片付け"></a>
+
+## 後片付け
+
+```bash
+# コンテナ一括削除
+$ docker container prune -f
+
+# ボリューム一括削除
+$ docker volume prune -f
+
+# イメージ一括削除
+$ docker image prune -a -f
+
+# ネットワーク一括削除
+$ docker network prune -f
+
+# 全部一括削除
+$ docker system prune -a -f --volumes
+```
 
 <br><br>
 
