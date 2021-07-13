@@ -28,6 +28,7 @@ Dockerfile
   - [LABEL](#label)
   - [ENV](#env)
   - [ADD と COPY](#add-と-copy)
+  - [USER](#user)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -566,6 +567,36 @@ $ docker run -it --name add yaand/add:latest sh
 ```
 
 </details>
+
+<br><br>
+
+<a id="markdown-user" name="user"></a>
+
+## USER
+
+後続の RUN、CMD、ENTRYPOINT で使われるユーザー（・グループ）を指定
+
+```dockerfile
+USER <user>[:<group>]
+# または
+USER <UID>[:<GID>]
+```
+
+```dockerfile
+FROM ubuntu
+
+RUN useradd docker
+USER docker
+
+CMD ["/bin/bash"]
+```
+
+```bash
+$ docker build -t yaand/user:latest dockerfiles/USER/ -f dockerfiles/USER/Dockerfile
+$ docker run -it --rm --name user yaand/user:latest
+docker@af16ca6acefe:/$ whoami
+docker
+```
 
 <br><br>
 
