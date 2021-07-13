@@ -27,6 +27,7 @@ Dockerfile
     - [コマンドのオプションを実行時に置き換える](#コマンドのオプションを実行時に置き換える)
   - [LABEL](#label)
   - [ENV](#env)
+  - [ADD と COPY](#add-と-copy)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -460,10 +461,93 @@ ENV Key1="Value 001" Key2=Value\ 002 \
 
 | 参照           | key が定義済 | key が未定義 |
 | -------------- | ------------ | ------------ |
-| `$key`         | `Value`      |              |
-| `${key}`       | `Value`      |              |
+| `$key`         | `Value`      | `""`         |
+| `${key}`       | `Value`      | `""`         |
 | `${key:-word}` | `Value`      | `word`       |
-| `${key:+word}` | `word`       | 空文字       |
+| `${key:+word}` | `word`       | `""`         |
+
+<br><br>
+
+<a id="markdown-add-と-copy" name="add-と-copy"></a>
+
+## ADD と COPY
+
+- `ADD`
+  - ファイル
+  - ディレクトリ（ディレクトリそのものではなく中身がコピーされる）
+  - 圧縮ファイル（ tar アーカイブであって、認識できるフォーマット（gzip、bzip2、xz））
+  - リモートファイル URL
+
+```dockerfile
+ADD <src>... <dest>
+ADD ["<src>",... "<dest>"]
+```
+
+- `COPY`
+  - ファイル
+  - ディレクトリ
+  - 実行済のビルドステージ `--from=<name|index>`
+
+```dockerfile
+COPY <src>... <dest>
+COPY ["<src>",... "<dest>"]
+```
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+$ cd dockerfiles/ADD/
+$ tar -zcvf lipsum.tar.gz lipsum.txt
+```
+
+```dockerfile
+FROM alpine
+
+# 既存ディレクトリ
+ADD lipsum.txt /tmp
+ADD lipsum.txt /tmp/lipsum2.txt
+
+ADD lipsum.tar.gz /tmp
+
+ADD https://raw.githubusercontent.com/YA-androidapp/Docker-Cheatsheet/main/LICENSE /tmp
+
+# 新規ディレクトリ
+ADD lipsum.txt /lipsum1
+ADD lipsum.tar.gz /lipsum2
+ADD https://raw.githubusercontent.com/YA-androidapp/Docker-Cheatsheet/main/LICENSE /lipsum3
+
+ADD lipsum.txt /lipsum4/
+ADD lipsum.tar.gz /lipsum5/
+ADD https://raw.githubusercontent.com/YA-androidapp/Docker-Cheatsheet/main/LICENSE /lipsum6/
+```
+
+```bash
+$ docker build -t yaand/add:latest dockerfiles/ADD/ -f dockerfiles/ADD/Dockerfile
+$ docker run -it --name add yaand/add:latest sh
+/ # ls -la /tmp
+-rw-------    1 root     root         11324 Jan  1  1970 LICENSE
+-rw-r--r--    1 501      dialout       2774 Jul 13 10:28 lipsum.txt
+-rw-r--r--    1 root     root          2774 Jul 13 10:28 lipsum2.txt
+
+/ # ls -laR /lipsum*
+-rw-r--r--    1 root     root          2774 Jul 13 10:28 /lipsum1
+-rw-------    1 root     root         11324 Jan  1  1970 /lipsum3
+
+/lipsum2:
+-rw-r--r--    1 501      dialout       2774 Jul 13 10:28 lipsum.txt
+
+/lipsum4:
+-rw-r--r--    1 root     root          2774 Jul 13 10:28 lipsum.txt
+
+/lipsum5:
+-rw-r--r--    1 501      dialout       2774 Jul 13 10:28 lipsum.txt
+
+/lipsum6:
+-rw-------    1 root     root         11324 Jan  1  1970 LICENSE
+```
+
+</details>
 
 <br><br>
 
