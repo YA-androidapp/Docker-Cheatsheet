@@ -22,7 +22,7 @@ Dockerfile
   - [RUN](#run)
     - [apt の例](#apt-の例)
     - [コマンドの形式](#コマンドの形式)
-  - [CMD](#cmd)
+  - [CMD と ENTRYPOINT](#cmd-と-entrypoint)
     - [コマンドを実行時に置き換える](#コマンドを実行時に置き換える)
     - [コマンドのオプションを実行時に置き換える](#コマンドのオプションを実行時に置き換える)
   - [LABEL](#label)
@@ -308,9 +308,9 @@ root@ac8d2263d31c:/# exit
 
 <br><br>
 
-<a id="markdown-cmd" name="cmd"></a>
+<a id="markdown-cmd-と-entrypoint" name="cmd-と-entrypoint"></a>
 
-## CMD
+## CMD と ENTRYPOINT
 
 ```dockerfile
 FROM ubuntu
@@ -319,9 +319,11 @@ FROM ubuntu
 
 # シェル形式(`/bin/sh -c`の中で実行)
 CMD ls -la /
+ENTRYPOINT ls -la /
 
 # exec 形式
 CMD ["ls","-la","/"]
+ENTRYPOINT ["ls","-la","/"]
 
 # 実行モジュールを省略する場合は ENTRYPOINT 命令を合わせて指定する
 ENTRYPOINT ["ls"]
@@ -339,7 +341,15 @@ CMD ["-la", "/"]
 
 ```bash
 # シェル形式
+$ docker build -t yaand/entrypoint-shell:latest dockerfiles/ENTRYPOINT/shell/ -f dockerfiles/ENTRYPOINT/shell/Dockerfile
 $ docker build -t yaand/cmd-shell:latest dockerfiles/CMD/shell/ -f dockerfiles/CMD/shell/Dockerfile
+
+# ENTRYPOINT で指定された `ls -la /` が実行される
+$ docker run --rm --name entrypoint-shell yaand/entrypoint-shell:latest
+
+# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
+$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest
+$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest -la /home
 
 # CMD で指定された `ls -la /` が実行される
 $ docker run --rm --name cmd-shell yaand/cmd-shell:latest
@@ -357,7 +367,15 @@ $ docker run --rm --name cmd-shell yaand/cmd-shell:latest ls -la /home
 
 ```bash
 # exec 形式
+$ docker build -t yaand/entrypoint-exec:latest dockerfiles/ENTRYPOINT/exec/ -f dockerfiles/ENTRYPOINT/exec/Dockerfile
 $ docker build -t yaand/cmd-exec:latest dockerfiles/CMD/exec/ -f dockerfiles/CMD/exec/Dockerfile
+
+# ENTRYPOINT で指定された `ls -la /` が実行される
+$ docker run --rm --name entrypoint-exec yaand/entrypoint-exec:latest
+
+# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
+$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest
+$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest -la /home
 
 # CMD で指定された `ls -la /` が実行される
 $ docker run --rm --name cmd-exec yaand/cmd-exec:latest
