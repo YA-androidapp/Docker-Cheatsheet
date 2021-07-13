@@ -29,6 +29,7 @@ Dockerfile
   - [ENV](#env)
   - [ADD と COPY](#add-と-copy)
   - [USER](#user)
+  - [WORKDIR](#workdir)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -602,6 +603,26 @@ docker
 ```
 
 </details>
+
+<br><br>
+
+<a id="markdown-workdir" name="workdir"></a>
+
+## WORKDIR
+
+後続の RUN、CMD、ENTRYPOINT、COPY、ADD で使われるワークディレクトリを指定
+
+- WORKDIR が存在しないときは生成される
+- 複数回定義することができる
+- 相対パスで指定された場合は、直前の WORKDIR 命令からの相対パスとなる
+
+```dockerfile
+WORKDIR /var/www
+WORKDIR html
+RUN pwd
+```
+
+> /var/www/html
 
 <br><br>
 
