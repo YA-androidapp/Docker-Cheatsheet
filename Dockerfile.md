@@ -12,10 +12,21 @@ Dockerfile
 
 - [Docker-Cheatsheet](#docker-cheatsheet)
   - [ビルドコマンド](#ビルドコマンド)
+  - [記述書式](#記述書式)
+  - [.dockerignore](#dockerignore)
+    - [ワイルドカード](#ワイルドカード)
+    - [除外](#除外)
   - [FROM](#from)
     - [FROM で ARG の設定値を使いたい場合](#from-で-arg-の設定値を使いたい場合)
     - [マルチステージビルド](#マルチステージビルド)
   - [RUN](#run)
+    - [apt の例](#apt-の例)
+    - [コマンドの形式](#コマンドの形式)
+  - [CMD](#cmd)
+    - [コマンドを実行時に置き換える](#コマンドを実行時に置き換える)
+    - [コマンドのオプションを実行時に置き換える](#コマンドのオプションを実行時に置き換える)
+  - [LABEL](#label)
+  - [ENV](#env)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -34,6 +45,96 @@ $ docker build .
 $ docker build -f ./Dockerfile.dev .
 ```
 
+<a id="markdown-記述書式" name="記述書式"></a>
+
+## 記述書式
+
+```dockerfile
+# Comment
+INSTRUCTION arguments
+```
+
+<br><br>
+
+<a id="markdown-dockerignore" name="dockerignore"></a>
+
+## .dockerignore
+
+- `.dockerignore` はビルドコンテキストの直下に置く
+- `.dockerignore` に記述するパスは相対パスで指定する
+- `Dockerfile` や `.dockerignore` ファイルも除外できる（ `ADD` や `COPY` ではコピーされなくなるが、ビルドの際にデーモンへ送信される）
+
+<br>
+
+```dockerignore
+# ビルドコンテキスト直下の .DS_Store のみ
+.DS_Store
+
+# ビルドコンテキスト直下の logs ファイルまたは logs/ ディレクトリ
+logs
+```
+
+<br><br>
+
+<a id="markdown-ワイルドカード" name="ワイルドカード"></a>
+
+### ワイルドカード
+
+<details>
+    <summary>.dockerignore</summary>
+
+```dockerignore
+# 任意のディレクトリにある.DS_Store
+**/.DS_Store
+
+# databaseディレクトリにある任意のSQLiteファイル
+database/*.sqlite3
+
+# foo/temp.txt, foo/tempdir/
+*/temp*
+
+# foo/bar/temp.txt, foo/bar/tempdir/
+*/*/temp*
+
+# tempa/, tempb/
+temp?
+```
+
+</details>
+
+<br>
+
+<a id="markdown-除外" name="除外"></a>
+
+### 除外
+
+<details>
+    <summary>.dockerignore</summary>
+
+```dockerignore
+# README.md 以外を除外する
+*.md
+!README.md
+```
+
+```dockerignore
+# README.md は含まれるが README-secret.md は除外する
+*.md
+!README*.md
+README-secret.md
+```
+
+```
+# README-secret.md も除外しない
+*.md
+README-secret.md
+!README*.md
+```
+
+</details>
+
+<br>
+
 <br><br>
 
 <a id="markdown-from" name="from"></a>
@@ -41,13 +142,25 @@ $ docker build -f ./Dockerfile.dev .
 ## FROM
 
 ```dockerfile
+FROM ubuntu
+```
+
+```dockerfile
 FROM ubuntu AS myubuntu
+```
+
+```dockerfile
 FROM ubuntu:21.04 AS myubuntu21
 ```
+
+<br><br>
 
 <a id="markdown-from-で-arg-の設定値を使いたい場合" name="from-で-arg-の設定値を使いたい場合"></a>
 
 ### FROM で ARG の設定値を使いたい場合
+
+<details>
+    <summary>Dockerfile</summary>
 
 ```dockerfile
 ARG IMAGE_VERSION=latest
@@ -57,19 +170,58 @@ ARG VERSION
 RUN echo $VERSION
 ```
 
+</details>
+
+<br><br>
+
 <a id="markdown-マルチステージビルド" name="マルチステージビルド"></a>
 
 ### マルチステージビルド
 
-```dockerfile
+<details>
+    <summary>Dockerfile</summary>
 
+```dockerfile
+FROM node:alpine as node
+FROM php:fpm-alpine
+
+WORKDIR /var/www/html
+
+RUN apk add --no-cache --virtual g++
+RUN apk add --no-cache libstdc++ && apk add --no-cache libgcc
+
+COPY --from=node /usr/local/bin/node /usr/local/bin/
+COPY --from=node /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
+RUN ln -s /usr/local/bin/node /usr/local/bin/nodejs \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npx
 ```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+$ docker build -t yaand/from-php-node:latest dockerfiles/FROM/php-node/ -f dockerfiles/FROM/php-node/Dockerfile
+$ docker run --rm --name from-php-node yaand/from-php-node:latest node version
+```
+
+</details>
+
+<br>
 
 <br><br>
 
 <a id="markdown-run" name="run"></a>
 
 ## RUN
+
+<a id="markdown-apt-の例" name="apt-の例"></a>
+
+### apt の例
 
 ```dockerfile
 FROM ubuntu
@@ -80,10 +232,22 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 ```
 
+<br>
+
+<details>
+    <summary>Commands</summary>
+
 ```bash
-$ docker build -t yaand/mycontainer:latest docker/dockerfiles/RUN/
-$ docker run --name mycontainer yaand/mycontainer:latest ip a
+$ docker build -t yaand/run-iproute2:latest dockerfiles/RUN/iproute2/ -f dockerfiles/RUN/iproute2/Dockerfile
+$ docker run --rm --name run-iproute2 yaand/run-iproute2:latest ip a
 ```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Results</summary>
 
 ```
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -99,6 +263,209 @@ $ docker run --name mycontainer yaand/mycontainer:latest ip a
     inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
        valid_lft forever preferred_lft forever
 ```
+
+</details>
+
+<br>
+
+<a id="markdown-コマンドの形式" name="コマンドの形式"></a>
+
+### コマンドの形式
+
+```dockerfile
+FROM ubuntu
+
+# シェル形式
+#   既定では、 `/bin/sh -c`(Linux) または `cmd /S /C`(Windows)
+RUN echo $0 > sh.txt
+#   '/bin/sh' 以外の別のシェルを利用する場合
+RUN /bin/bash -c 'echo $0 > bash.txt'
+
+# exec 形式(コマンドシェルを起動せずに直接実行する)
+RUN ["/bin/ls", "-l", "/"]
+RUN ["/bin/bash", "-c", "echo $0 > exec.txt"]
+```
+
+<br>
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+$ docker build -t yaand/run-shell:latest dockerfiles/RUN/shell/ -f dockerfiles/RUN/shell/Dockerfile
+$ docker run -it --rm --name run-shell yaand/run-shell:latest /bin/bash
+root@ac8d2263d31c:/# cat sh.txt
+/bin/sh
+root@ac8d2263d31c:/# cat bash.txt
+/bin/bash
+root@ac8d2263d31c:/# cat exec.txt
+/bin/bash
+root@ac8d2263d31c:/# exit
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-cmd" name="cmd"></a>
+
+## CMD
+
+```dockerfile
+FROM ubuntu
+
+# CMD を複数記述した場合は最後の1つのみ実行される
+
+# シェル形式(`/bin/sh -c`の中で実行)
+CMD ls -la /
+
+# exec 形式
+CMD ["ls","-la","/"]
+
+# 実行モジュールを省略する場合は ENTRYPOINT 命令を合わせて指定する
+ENTRYPOINT ["ls"]
+CMD ["-la", "/"]
+```
+
+<br><br>
+
+<a id="markdown-コマンドを実行時に置き換える" name="コマンドを実行時に置き換える"></a>
+
+### コマンドを実行時に置き換える
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# シェル形式
+$ docker build -t yaand/cmd-shell:latest dockerfiles/CMD/shell/ -f dockerfiles/CMD/shell/Dockerfile
+
+# CMD で指定された `ls -la /` が実行される
+$ docker run --rm --name cmd-shell yaand/cmd-shell:latest
+
+# CMD の内容を引数で置き換えて `ls -la /home` が実行される
+$ docker run --rm --name cmd-shell yaand/cmd-shell:latest ls -la /home
+```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# exec 形式
+$ docker build -t yaand/cmd-exec:latest dockerfiles/CMD/exec/ -f dockerfiles/CMD/exec/Dockerfile
+
+# CMD で指定された `ls -la /` が実行される
+$ docker run --rm --name cmd-exec yaand/cmd-exec:latest
+
+# CMD の内容を引数で置き換えて `ls -la /home` が実行される
+$ docker run --rm --name cmd-exec yaand/cmd-exec:latest ls -la /home
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-コマンドのオプションを実行時に置き換える" name="コマンドのオプションを実行時に置き換える"></a>
+
+### コマンドのオプションを実行時に置き換える
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# ENTRYPOINT 命令を合わせて指定
+$ docker build -t yaand/cmd-entrypoint:latest dockerfiles/CMD/entrypoint/ -f dockerfiles/CMD/entrypoint/Dockerfile
+
+# ENTRYPOINT で指定された `ls` に CMD で指定された `-la /` を追加して実行される
+$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest
+
+# ENTRYPOINT で指定された `ls` に、 CMD の内容を引数で置き換えた `-la /home` を追加して実行される
+$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest -la /home
+
+# ENTRYPOINT の内容を引数で置き換えた `dpkg` が実行される (["dpkg", "-la", "/"] ではなく、 ["dpkg"] のみ)
+$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest
+  # dpkg: error: need an action option
+
+    # `docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -la /` と実行すると
+    # dpkg-query: no packages found matching /
+    # という、異なる結果になるため、 CMD の内容は無視されていることがわかる
+    #   「--entrypoint を指定すると、イメージ上のあらゆるデフォルト命令群が削除されます」
+    #   https://docs.docker.jp/engine/reference/run.html#entrypoint
+
+# ENTRYPOINT の内容を引数で置き換えた `dpkg` に、 CMD の内容を引数で置き換えた `-l` を追加して実行される
+$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -l
+  # Desired=Unknown/Install/Remove/Purge/Hold
+  # | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+  # |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+  # ||/ Name                    Version                      Architecture Description
+  # +++-=======================-============================-============-========================================================================
+  # ii  adduser                 3.118ubuntu2                 all          add and remove users and groups
+  # ii  apt                     2.0.5                        amd64        commandline package manager
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-label" name="label"></a>
+
+## LABEL
+
+<details>
+    <summary>Dockerfile</summary>
+
+```dockerfile
+FROM ubuntu
+
+LABEL maintainer="YA-androidapp(https://github.com/YA-androidapp)" \
+      version="1.0" \
+      description="This is hoge image."
+```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+$ docker build -t yaand/label:latest dockerfiles/LABEL/ -f dockerfiles/LABEL/Dockerfile
+$ docker run -it --name label yaand/label:latest
+
+# `docker inspect` で確認
+$ docker inspect --format '{{ index .Config.Labels "maintainer"}}' label
+```
+
+> YA-androidapp(https://github.com/YA-androidapp)
+
+</details>
+
+<br><br>
+
+<a id="markdown-env" name="env"></a>
+
+## ENV
+
+```dockerfile
+ENV Key Value
+ENV Key=Value
+ENV Key1="Value 001" Key2=Value\ 002 \
+    Key3="Value 003"
+```
+
+| 参照           | key が定義済 | key が未定義 |
+| -------------- | ------------ | ------------ |
+| `$key`         | `Value`      |              |
+| `${key}`       | `Value`      |              |
+| `${key:-word}` | `Value`      | `word`       |
+| `${key:+word}` | `word`       | 空文字       |
+
+<br><br>
 
 ---
 
