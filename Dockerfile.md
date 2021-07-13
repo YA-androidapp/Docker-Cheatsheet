@@ -582,6 +582,9 @@ USER <user>[:<group>]
 USER <UID>[:<GID>]
 ```
 
+<details>
+    <summary>Commands</summary>
+
 ```dockerfile
 FROM ubuntu
 
@@ -597,6 +600,8 @@ $ docker run -it --rm --name user yaand/user:latest
 docker@af16ca6acefe:/$ whoami
 docker
 ```
+
+</details>
 
 <br><br>
 
