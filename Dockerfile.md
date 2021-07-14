@@ -16,20 +16,23 @@ Dockerfile
   - [.dockerignore](#dockerignore)
     - [ワイルドカード](#ワイルドカード)
     - [除外](#除外)
+  - [ARG](#arg)
+    - [マルチステージビルド](#マルチステージビルド)
   - [FROM](#from)
     - [FROM で ARG の設定値を使いたい場合](#from-で-arg-の設定値を使いたい場合)
-    - [マルチステージビルド](#マルチステージビルド)
+    - [マルチステージビルド](#マルチステージビルド-1)
+  - [LABEL](#label)
+  - [ENV](#env)
+  - [USER](#user)
+  - [WORKDIR](#workdir)
+  - [ADD と COPY](#add-と-copy)
+  - [SHELL](#shell)
   - [RUN](#run)
     - [apt の例](#apt-の例)
     - [コマンドの形式](#コマンドの形式)
   - [CMD と ENTRYPOINT](#cmd-と-entrypoint)
     - [コマンドを実行時に置き換える](#コマンドを実行時に置き換える)
     - [コマンドのオプションを実行時に置き換える](#コマンドのオプションを実行時に置き換える)
-  - [LABEL](#label)
-  - [ENV](#env)
-  - [ADD と COPY](#add-と-copy)
-  - [USER](#user)
-  - [WORKDIR](#workdir)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -140,6 +143,71 @@ README-secret.md
 
 <br><br>
 
+<a id="markdown-arg" name="arg"></a>
+
+## ARG
+
+FROM よりも前に記述できる唯一の命令
+
+<details>
+    <summary>Commands</summary>
+
+```dockerfile
+FROM ubuntu
+
+RUN echo '${user:-default_user}: ' ${user:-default_user}
+RUN echo '${user:+default_user}: ' ${user:+default_user}
+ARG user=default_user
+RUN echo '${user}: ' $user
+```
+
+```bash
+$ docker build -t yaand/arg:latest -f dockerfiles/ARG/Dockerfile dockerfiles/ARG/
+```
+
+```
+${user:-default_user}:  default_user
+${user:+default_user}:
+${user}:  default_user
+```
+
+<br>
+
+```bash
+$ docker build -t yaand/arg:latest --build-arg user=option_user -f dockerfiles/ARG/Dockerfile dockerfiles/ARG/
+```
+
+```
+${user:-default_user}:  default_user
+${user:+default_user}:
+${user}:  option_user
+```
+
+</details>
+
+<a id="markdown-マルチステージビルド" name="マルチステージビルド"></a>
+
+### マルチステージビルド
+
+マルチステージビルドの場合、ビルドステージごとに `ARG` 命令を記述する必要がある
+
+<details>
+    <summary>Dockerfile</summary>
+
+```dockerfile
+FROM ubuntu
+ARG SETTINGS
+RUN echo $SETTINGS
+
+FROM ubuntu
+ARG SETTINGS
+RUN echo $SETTINGS
+```
+
+</details>
+
+<br><br>
+
 <a id="markdown-from" name="from"></a>
 
 ## FROM
@@ -177,7 +245,7 @@ RUN echo $VERSION
 
 <br><br>
 
-<a id="markdown-マルチステージビルド" name="マルチステージビルド"></a>
+<a id="markdown-マルチステージビルド-1" name="マルチステージビルド-1"></a>
 
 ### マルチステージビルド
 
@@ -208,224 +276,8 @@ RUN ln -s /usr/local/bin/node /usr/local/bin/nodejs \
     <summary>Commands</summary>
 
 ```bash
-$ docker build -t yaand/from-php-node:latest dockerfiles/FROM/php-node/ -f dockerfiles/FROM/php-node/Dockerfile
+$ docker build -t yaand/from-php-node:latest -f dockerfiles/FROM/php-node/Dockerfile dockerfiles/FROM/php-node/
 $ docker run --rm --name from-php-node yaand/from-php-node:latest node version
-```
-
-</details>
-
-<br>
-
-<br><br>
-
-<a id="markdown-run" name="run"></a>
-
-## RUN
-
-<a id="markdown-apt-の例" name="apt-の例"></a>
-
-### apt の例
-
-```dockerfile
-FROM ubuntu
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    iproute2 \
- && apt-get -y clean \
- && rm -rf /var/lib/apt/lists/*
-```
-
-<br>
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-$ docker build -t yaand/run-iproute2:latest dockerfiles/RUN/iproute2/ -f dockerfiles/RUN/iproute2/Dockerfile
-$ docker run --rm --name run-iproute2 yaand/run-iproute2:latest ip a
-```
-
-</details>
-
-<br>
-
-<details>
-    <summary>Results</summary>
-
-```
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
-    link/ipip 0.0.0.0 brd 0.0.0.0
-3: ip6tnl0@NONE: <NOARP> mtu 1452 qdisc noop state DOWN group default qlen 1000
-    link/tunnel6 :: brd ::
-16: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
-```
-
-</details>
-
-<br>
-
-<a id="markdown-コマンドの形式" name="コマンドの形式"></a>
-
-### コマンドの形式
-
-```dockerfile
-FROM ubuntu
-
-# シェル形式
-#   既定では、 `/bin/sh -c`(Linux) または `cmd /S /C`(Windows)
-RUN echo $0 > sh.txt
-#   '/bin/sh' 以外の別のシェルを利用する場合
-RUN /bin/bash -c 'echo $0 > bash.txt'
-
-# exec 形式(コマンドシェルを起動せずに直接実行する)
-RUN ["/bin/ls", "-l", "/"]
-RUN ["/bin/bash", "-c", "echo $0 > exec.txt"]
-```
-
-<br>
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-$ docker build -t yaand/run-shell:latest dockerfiles/RUN/shell/ -f dockerfiles/RUN/shell/Dockerfile
-$ docker run -it --rm --name run-shell yaand/run-shell:latest /bin/bash
-root@ac8d2263d31c:/# cat sh.txt
-/bin/sh
-root@ac8d2263d31c:/# cat bash.txt
-/bin/bash
-root@ac8d2263d31c:/# cat exec.txt
-/bin/bash
-root@ac8d2263d31c:/# exit
-```
-
-</details>
-
-<br><br>
-
-<a id="markdown-cmd-と-entrypoint" name="cmd-と-entrypoint"></a>
-
-## CMD と ENTRYPOINT
-
-```dockerfile
-FROM ubuntu
-
-# CMD を複数記述した場合は最後の1つのみ実行される
-
-# シェル形式(`/bin/sh -c`の中で実行)
-CMD ls -la /
-ENTRYPOINT ls -la /
-
-# exec 形式
-CMD ["ls","-la","/"]
-ENTRYPOINT ["ls","-la","/"]
-
-# 実行モジュールを省略する場合は ENTRYPOINT 命令を合わせて指定する
-ENTRYPOINT ["ls"]
-CMD ["-la", "/"]
-```
-
-<br><br>
-
-<a id="markdown-コマンドを実行時に置き換える" name="コマンドを実行時に置き換える"></a>
-
-### コマンドを実行時に置き換える
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-# シェル形式
-$ docker build -t yaand/entrypoint-shell:latest dockerfiles/ENTRYPOINT/shell/ -f dockerfiles/ENTRYPOINT/shell/Dockerfile
-$ docker build -t yaand/cmd-shell:latest dockerfiles/CMD/shell/ -f dockerfiles/CMD/shell/Dockerfile
-
-# ENTRYPOINT で指定された `ls -la /` が実行される
-$ docker run --rm --name entrypoint-shell yaand/entrypoint-shell:latest
-
-# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
-$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest
-$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest -la /home
-
-# CMD で指定された `ls -la /` が実行される
-$ docker run --rm --name cmd-shell yaand/cmd-shell:latest
-
-# CMD の内容を引数で置き換えて `ls -la /home` が実行される
-$ docker run --rm --name cmd-shell yaand/cmd-shell:latest ls -la /home
-```
-
-</details>
-
-<br>
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-# exec 形式
-$ docker build -t yaand/entrypoint-exec:latest dockerfiles/ENTRYPOINT/exec/ -f dockerfiles/ENTRYPOINT/exec/Dockerfile
-$ docker build -t yaand/cmd-exec:latest dockerfiles/CMD/exec/ -f dockerfiles/CMD/exec/Dockerfile
-
-# ENTRYPOINT で指定された `ls -la /` が実行される
-$ docker run --rm --name entrypoint-exec yaand/entrypoint-exec:latest
-
-# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
-$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest
-$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest -la /home
-
-# CMD で指定された `ls -la /` が実行される
-$ docker run --rm --name cmd-exec yaand/cmd-exec:latest
-
-# CMD の内容を引数で置き換えて `ls -la /home` が実行される
-$ docker run --rm --name cmd-exec yaand/cmd-exec:latest ls -la /home
-```
-
-</details>
-
-<br><br>
-
-<a id="markdown-コマンドのオプションを実行時に置き換える" name="コマンドのオプションを実行時に置き換える"></a>
-
-### コマンドのオプションを実行時に置き換える
-
-<details>
-    <summary>Commands</summary>
-
-```bash
-# ENTRYPOINT 命令を合わせて指定
-$ docker build -t yaand/cmd-entrypoint:latest dockerfiles/CMD/entrypoint/ -f dockerfiles/CMD/entrypoint/Dockerfile
-
-# ENTRYPOINT で指定された `ls` に CMD で指定された `-la /` を追加して実行される
-$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest
-
-# ENTRYPOINT で指定された `ls` に、 CMD の内容を引数で置き換えた `-la /home` を追加して実行される
-$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest -la /home
-
-# ENTRYPOINT の内容を引数で置き換えた `dpkg` が実行される (["dpkg", "-la", "/"] ではなく、 ["dpkg"] のみ)
-$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest
-  # dpkg: error: need an action option
-
-    # `docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -la /` と実行すると
-    # dpkg-query: no packages found matching /
-    # という、異なる結果になるため、 CMD の内容は無視されていることがわかる
-    #   「--entrypoint を指定すると、イメージ上のあらゆるデフォルト命令群が削除されます」
-    #   https://docs.docker.jp/engine/reference/run.html#entrypoint
-
-# ENTRYPOINT の内容を引数で置き換えた `dpkg` に、 CMD の内容を引数で置き換えた `-l` を追加して実行される
-$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -l
-  # Desired=Unknown/Install/Remove/Purge/Hold
-  # | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-  # |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-  # ||/ Name                    Version                      Architecture Description
-  # +++-=======================-============================-============-========================================================================
-  # ii  adduser                 3.118ubuntu2                 all          add and remove users and groups
-  # ii  apt                     2.0.5                        amd64        commandline package manager
 ```
 
 </details>
@@ -455,7 +307,7 @@ LABEL maintainer="YA-androidapp(https://github.com/YA-androidapp)" \
     <summary>Commands</summary>
 
 ```bash
-$ docker build -t yaand/label:latest dockerfiles/LABEL/ -f dockerfiles/LABEL/Dockerfile
+$ docker build -t yaand/label:latest -f dockerfiles/LABEL/Dockerfile dockerfiles/LABEL/
 $ docker run -it --name label yaand/label:latest
 
 # `docker inspect` で確認
@@ -473,6 +325,8 @@ $ docker inspect --format '{{ index .Config.Labels "maintainer"}}' label
 ## ENV
 
 ```dockerfile
+FROM ubuntu
+
 ENV Key Value
 ENV Key=Value
 ENV Key1="Value 001" Key2=Value\ 002 \
@@ -485,6 +339,70 @@ ENV Key1="Value 001" Key2=Value\ 002 \
 | `${key}`       | `Value`      | `""`         |
 | `${key:-word}` | `Value`      | `word`       |
 | `${key:+word}` | `word`       | `""`         |
+
+```bash
+$ docker build -t yaand/env:latest -f dockerfiles/ENV/Dockerfile dockerfiles/ENV/
+$ docker run -it --rm --env Key=ChangedValue --name env yaand/env:latest bash
+root@91ae9e23e667:/# echo $Key
+ChangedValue
+root@91ae9e23e667:/# echo $Key1
+Value 001
+```
+
+<br><br>
+
+<a id="markdown-user" name="user"></a>
+
+## USER
+
+後続の RUN、CMD、ENTRYPOINT で使われるユーザー（・グループ）を指定
+
+```dockerfile
+USER <user>[:<group>]
+# または
+USER <UID>[:<GID>]
+```
+
+<details>
+    <summary>Commands</summary>
+
+```dockerfile
+FROM ubuntu
+
+RUN useradd docker
+USER docker
+
+CMD ["/bin/bash"]
+```
+
+```bash
+$ docker build -t yaand/user:latest -f dockerfiles/USER/Dockerfile dockerfiles/USER/
+$ docker run -it --rm --name user yaand/user:latest
+docker@af16ca6acefe:/$ whoami
+docker
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-workdir" name="workdir"></a>
+
+## WORKDIR
+
+後続の RUN、CMD、ENTRYPOINT、COPY、ADD で使われるワークディレクトリを指定
+
+- WORKDIR が存在しないときは生成される
+- 複数回定義することができる
+- 相対パスで指定された場合は、直前の WORKDIR 命令からの相対パスとなる
+
+```dockerfile
+WORKDIR /var/www
+WORKDIR html
+RUN pwd
+```
+
+> /var/www/html
 
 <br><br>
 
@@ -543,7 +461,7 @@ ADD https://raw.githubusercontent.com/YA-androidapp/Docker-Cheatsheet/main/LICEN
 ```
 
 ```bash
-$ docker build -t yaand/add:latest dockerfiles/ADD/ -f dockerfiles/ADD/Dockerfile
+$ docker build -t yaand/add:latest -f dockerfiles/ADD/Dockerfile dockerfiles/ADD/
 $ docker run -it --name add yaand/add:latest sh
 / # ls -la /tmp
 -rw-------    1 root     root         11324 Jan  1  1970 LICENSE
@@ -571,58 +489,236 @@ $ docker run -it --name add yaand/add:latest sh
 
 <br><br>
 
-<a id="markdown-user" name="user"></a>
+<a id="markdown-shell" name="shell"></a>
 
-## USER
+## SHELL
 
-後続の RUN、CMD、ENTRYPOINT で使われるユーザー（・グループ）を指定
+RUN、CMD、ENTRYPOINT の各コマンドをシェル形式で記述した際に影響する
 
 ```dockerfile
-USER <user>[:<group>]
-# または
-USER <UID>[:<GID>]
+# 既定
+SHELL ["/bin/sh", "-c"]
+
+SHELL ["/bin/bash", "-c"]
+
+SHELL ["powershell", "-command"]
+
+SHELL ["cmd", "/S", "/C"]
 ```
+
+<br><br>
+
+<a id="markdown-run" name="run"></a>
+
+## RUN
+
+<a id="markdown-apt-の例" name="apt-の例"></a>
+
+### apt の例
+
+```dockerfile
+FROM ubuntu
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    iproute2 \
+ && apt-get -y clean \
+ && rm -rf /var/lib/apt/lists/*
+```
+
+<br>
 
 <details>
     <summary>Commands</summary>
 
+```bash
+$ docker build -t yaand/run-iproute2:latest -f dockerfiles/RUN/iproute2/Dockerfile dockerfiles/RUN/iproute2/
+$ docker run --rm --name run-iproute2 yaand/run-iproute2:latest ip a
+```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Results</summary>
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0
+3: ip6tnl0@NONE: <NOARP> mtu 1452 qdisc noop state DOWN group default qlen 1000
+    link/tunnel6 :: brd ::
+16: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+</details>
+
+<br>
+
+<a id="markdown-コマンドの形式" name="コマンドの形式"></a>
+
+### コマンドの形式
+
 ```dockerfile
 FROM ubuntu
 
-RUN useradd docker
-USER docker
+# シェル形式
+#   既定では、 `/bin/sh -c`(Linux) または `cmd /S /C`(Windows)
+RUN echo $0 > sh.txt
+#   '/bin/sh' 以外の別のシェルを利用する場合
+RUN /bin/bash -c 'echo $0 > bash.txt'
 
-CMD ["/bin/bash"]
+# exec 形式(コマンドシェルを起動せずに直接実行する)
+RUN ["/bin/ls", "-l", "/"]
+RUN ["/bin/bash", "-c", "echo $0 > exec.txt"]
 ```
 
+<br>
+
+<details>
+    <summary>Commands</summary>
+
 ```bash
-$ docker build -t yaand/user:latest dockerfiles/USER/ -f dockerfiles/USER/Dockerfile
-$ docker run -it --rm --name user yaand/user:latest
-docker@af16ca6acefe:/$ whoami
-docker
+$ docker build -t yaand/run-shell:latest -f dockerfiles/RUN/shell/Dockerfile dockerfiles/RUN/shell/
+$ docker run -it --rm --name run-shell yaand/run-shell:latest /bin/bash
+root@ac8d2263d31c:/# cat sh.txt
+/bin/sh
+root@ac8d2263d31c:/# cat bash.txt
+/bin/bash
+root@ac8d2263d31c:/# cat exec.txt
+/bin/bash
+root@ac8d2263d31c:/# exit
 ```
 
 </details>
 
 <br><br>
 
-<a id="markdown-workdir" name="workdir"></a>
+<a id="markdown-cmd-と-entrypoint" name="cmd-と-entrypoint"></a>
 
-## WORKDIR
-
-後続の RUN、CMD、ENTRYPOINT、COPY、ADD で使われるワークディレクトリを指定
-
-- WORKDIR が存在しないときは生成される
-- 複数回定義することができる
-- 相対パスで指定された場合は、直前の WORKDIR 命令からの相対パスとなる
+## CMD と ENTRYPOINT
 
 ```dockerfile
-WORKDIR /var/www
-WORKDIR html
-RUN pwd
+FROM ubuntu
+
+# CMD を複数記述した場合は最後の1つのみ実行される
+
+# シェル形式(`/bin/sh -c`の中で実行)
+CMD ls -la /
+ENTRYPOINT ls -la /
+
+# exec 形式
+CMD ["ls","-la","/"]
+ENTRYPOINT ["ls","-la","/"]
+
+# 実行モジュールを省略する場合は ENTRYPOINT 命令を合わせて指定する
+ENTRYPOINT ["ls"]
+CMD ["-la", "/"]
 ```
 
-> /var/www/html
+<br><br>
+
+<a id="markdown-コマンドを実行時に置き換える" name="コマンドを実行時に置き換える"></a>
+
+### コマンドを実行時に置き換える
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# シェル形式
+$ docker build -t yaand/entrypoint-shell:latest -f dockerfiles/ENTRYPOINT/shell/Dockerfile dockerfiles/ENTRYPOINT/shell/
+$ docker build -t yaand/cmd-shell:latest -f dockerfiles/CMD/shell/Dockerfile dockerfiles/CMD/shell/
+
+# ENTRYPOINT で指定された `ls -la /` が実行される
+$ docker run --rm --name entrypoint-shell yaand/entrypoint-shell:latest
+
+# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
+$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest
+$ docker run --rm --name entrypoint-shell --entrypoint="ls" yaand/entrypoint-shell:latest -la /home
+
+# CMD で指定された `ls -la /` が実行される
+$ docker run --rm --name cmd-shell yaand/cmd-shell:latest
+
+# CMD の内容を引数で置き換えて `ls -la /home` が実行される
+$ docker run --rm --name cmd-shell yaand/cmd-shell:latest ls -la /home
+```
+
+</details>
+
+<br>
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# exec 形式
+$ docker build -t yaand/entrypoint-exec:latest -f dockerfiles/ENTRYPOINT/exec/Dockerfile dockerfiles/ENTRYPOINT/exec/
+$ docker build -t yaand/cmd-exec:latest -f dockerfiles/CMD/exec/Dockerfile dockerfiles/CMD/exec/
+
+# ENTRYPOINT で指定された `ls -la /` が実行される
+$ docker run --rm --name entrypoint-exec yaand/entrypoint-exec:latest
+
+# ENTRYPOINT の内容を引数で置き換えて `ls` が実行される（ `--entrypoint` にはコマンドオプションは指定できない）
+$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest
+$ docker run --rm --name entrypoint-exec --entrypoint="ls" yaand/entrypoint-exec:latest -la /home
+
+# CMD で指定された `ls -la /` が実行される
+$ docker run --rm --name cmd-exec yaand/cmd-exec:latest
+
+# CMD の内容を引数で置き換えて `ls -la /home` が実行される
+$ docker run --rm --name cmd-exec yaand/cmd-exec:latest ls -la /home
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-コマンドのオプションを実行時に置き換える" name="コマンドのオプションを実行時に置き換える"></a>
+
+### コマンドのオプションを実行時に置き換える
+
+<details>
+    <summary>Commands</summary>
+
+```bash
+# ENTRYPOINT 命令を合わせて指定
+$ docker build -t yaand/cmd-entrypoint:latest -f dockerfiles/CMD/entrypoint/Dockerfile dockerfiles/CMD/entrypoint/
+
+# ENTRYPOINT で指定された `ls` に CMD で指定された `-la /` を追加して実行される
+$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest
+
+# ENTRYPOINT で指定された `ls` に、 CMD の内容を引数で置き換えた `-la /home` を追加して実行される
+$ docker run --rm --name cmd-entrypoint yaand/cmd-entrypoint:latest -la /home
+
+# ENTRYPOINT の内容を引数で置き換えた `dpkg` が実行される (["dpkg", "-la", "/"] ではなく、 ["dpkg"] のみ)
+$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest
+  # dpkg: error: need an action option
+
+    # `docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -la /` と実行すると
+    # dpkg-query: no packages found matching /
+    # という、異なる結果になるため、 CMD の内容は無視されていることがわかる
+    #   「--entrypoint を指定すると、イメージ上のあらゆるデフォルト命令群が削除されます」
+    #   https://docs.docker.jp/engine/reference/run.html#entrypoint
+
+# ENTRYPOINT の内容を引数で置き換えた `dpkg` に、 CMD の内容を引数で置き換えた `-l` を追加して実行される
+$ docker run --rm --name cmd-entrypoint --entrypoint=dpkg yaand/cmd-entrypoint:latest -l
+  # Desired=Unknown/Install/Remove/Purge/Hold
+  # | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+  # |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+  # ||/ Name                    Version                      Architecture Description
+  # +++-=======================-============================-============-========================================================================
+  # ii  adduser                 3.118ubuntu2                 all          add and remove users and groups
+  # ii  apt                     2.0.5                        amd64        commandline package manager
+```
+
+</details>
 
 <br><br>
 
