@@ -147,7 +147,8 @@ README-secret.md
 
 ## ARG
 
-FROM よりも前に記述できる唯一の命令
+- `FROM` よりも前に記述できる唯一の命令
+- `ENV` と `ARG` で同名の変数が指定されていたら `ENV` で定義した環境変数が優先される
 
 <details>
     <summary>Commands</summary>
@@ -288,6 +289,8 @@ $ docker run --rm --name from-php-node yaand/from-php-node:latest node version
 
 ## LABEL
 
+- `MAINTAINER` は廃止予定なので `LABEL` を利用する
+
 <details>
     <summary>Dockerfile</summary>
 
@@ -355,7 +358,7 @@ Value 001
 
 ## USER
 
-後続の RUN、CMD、ENTRYPOINT で使われるユーザー（・グループ）を指定
+- 後続の `RUN` 、 `CMD` 、 `ENTRYPOINT` で使われるユーザー（・グループ）を指定する
 
 ```dockerfile
 USER <user>[:<group>]
@@ -390,11 +393,11 @@ docker
 
 ## WORKDIR
 
-後続の RUN、CMD、ENTRYPOINT、COPY、ADD で使われるワークディレクトリを指定
+後続の `RUN` 、 `CMD` 、 `ENTRYPOINT` 、 `COPY` 、 `ADD` で使われるワークディレクトリを指定する
 
-- WORKDIR が存在しないときは生成される
+- `WORKDIR` が存在しないときは生成される
 - 複数回定義することができる
-- 相対パスで指定された場合は、直前の WORKDIR 命令からの相対パスとなる
+- 相対パスで指定された場合は、直前の `WORKDIR` 命令からの相対パスとなる
 
 ```dockerfile
 WORKDIR /var/www
@@ -493,7 +496,7 @@ $ docker run -it --name add yaand/add:latest sh
 
 ## SHELL
 
-RUN、CMD、ENTRYPOINT の各コマンドをシェル形式で記述した際に影響する
+`RUN` 、 `CMD` 、 `ENTRYPOINT` の各コマンドをシェル形式で記述した際に影響する
 
 ```dockerfile
 # 既定
