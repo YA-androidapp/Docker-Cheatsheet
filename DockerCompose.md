@@ -39,6 +39,34 @@ OpenSSL version: OpenSSL 1.1.1h  22 Sep 2020
 
 </details>
 
+<br>
+
+```bash
+# 構築
+$ docker compose build --build-arg key=val --force-rm --no-cache --pull
+
+# 構築、作成、起動、アタッチ
+$ docker compose up -d --build --force-recreate
+
+# 停止
+$ docker compose stop
+
+# コンテナを停止し、 up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除
+$ docker compose down
+    # Compose ファイル内で定義したサービス用のコンテナ
+    # Compose ファイルの network セクションで定義したネットワーク
+    # default ネットワーク（を使っている場合）
+$ docker compose down --rmi all
+    # あらゆるサービスで使う全イメージを削除
+$ docker compose down --volumes
+    # Compose ファイルの `volumes` セクションの名前付きボリュームと、コンテナがアタッチしたアノニマス・ボリュームを削除
+$ docker compose down --remove-orphans
+    # Compose ファイルで定義していないサービス用のコンテナも削除
+$ docker compose down --rmi all --volumes --remove-orphans
+    # すべて削除
+
+```
+
 <br><br>
 
 ---
