@@ -42,17 +42,141 @@ OpenSSL version: OpenSSL 1.1.1h  22 Sep 2020
 <br>
 
 ```bash
-# 構築
-$ docker compose build --build-arg key=val --force-rm --no-cache --pull
-$ docker compose build --build-arg key=val --force-rm --no-cache --pull <service>
+# docker-compose.yml の内容を表示
+$ docker compose --file ./compose/nginx/docker-compose.yml config
+```
 
+<details>
+    <summary>Results</summary>
+
+```yaml
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: 80
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/yu/Documents/GitHub/Docker-Cheatsheet/compose/config/index.html
+        target: /usr/share/nginx/html/index.html
+        bind:
+          create_host_path: true
+networks:
+  default:
+    name: config_default
+```
+
+</details>
+
+<br>
+
+```bash
+# サービスを構築
+# docker compose build --build-arg key=val --force-rm --no-cache --pull
+# docker compose build --build-arg key=val --force-rm --no-cache --pull <service>
+$ docker compose -f ./compose/nginx/docker-compose.yml build
+```
+
+<br>
+
+```bash
 # 構築、作成、起動、アタッチ
-$ docker compose up -d --build --force-recreate
-$ docker compose up -d --build --force-recreate <service>
+# docker compose up -d --build --force-recreate
+# docker compose up -d --build --force-recreate <service>
+$ docker compose -f ./compose/nginx/docker-compose.yml up -d
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+[+] Running 7/7
+ ⠿ nginx Pulled                                                                                    10.6s
+   ⠿ b4d181a07f80 Pull complete                                                                     4.1s
+   ⠿ 66b1c490df3f Pull complete                                                                     5.3s
+   ⠿ d0f91ae9b44c Pull complete                                                                     5.3s
+   ⠿ baf987068537 Pull complete                                                                     5.4s
+   ⠿ 6bbc76cbebeb Pull complete                                                                     5.5s
+   ⠿ 32b766478bc2 Pull complete                                                                     5.5s
+[+] Running 2/2
+ ⠿ Network nginx_default  Created                                                                   4.0s
+ ⠿ Container nginx        Started                                                                   4.0s
+```
+
+</details>
+
+<br>
+
+```bash
+# コンテナ一覧
+# docker compose ps
+$ docker compose -f ./compose/nginx/docker-compose.yml ps
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+NAME                SERVICE             STATUS              PORTS
+nginx               nginx               running             0.0.0.0:80->80/tcp, :::80->80/tcp
+```
+
+</details>
+
+<br>
+
+```bash
+# IDのみ
+# docker compose ps -q
+$ docker compose -f ./compose/nginx/docker-compose.yml ps -q
+```
+
+<details>
+    <summary>Results</summary>
+
+```
+70070728c13efbdc6318b45d51aa2b7f145ccbee9711bd5530bfeb3e40c3243c
+```
+
+</details>
+
+<br>
+
+```bash
+# docker-compose up で起動しているコンテナでコマンドを実行
+# docker compose exec <service> bash
+$ docker compose -f ./compose/nginx/docker-compose.yml exec nginx bash
+root@69ee177813c0:/# exit
+exit
+$ docker compose --file ./compose/nginx/docker-compose.yml ps
+NAME                SERVICE             STATUS              PORTS
+nginx               nginx               running             0.0.0.0:80->80/tcp, :::80->80/tcp
 
 # 停止
-$ docker compose stop
+$ docker compose -f ./compose/nginx/docker-compose.yml stop
+[+] Running 2/2
+ ⠿ Container nginx_nginx_run_dfe0eb2265c9  Stopped                                                                                        0.0s
+ ⠿ Container nginx                         Stopped                                                                                        1.2s
 
+# コンテナを新たに起動してコマンドを実行する
+# docker compose run <service> bash
+$ docker compose -f ./compose/nginx/docker-compose.yml run nginx bash
+root@c77ae496cb52:/# exit
+exit
+yu@A-MBP Docker-Cheatsheet % docker compose --file ./compose/nginx/docker-compose.yml ps
+NAME                SERVICE             STATUS              PORTS
+nginx               nginx               exited (0)
+```
+
+<br>
+
+```bash
 # コンテナを停止し、 up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除
 $ docker compose down
     # Composeファイル内で定義したサービス用のコンテナ
@@ -67,11 +191,6 @@ $ docker compose down --remove-orphans
 $ docker compose down --rmi all --volumes --remove-orphans
     # すべて削除
 
-# コンテナ一覧
-$ docker compose ps
-# IDのみ
-$ docker compose -q ps
-
 # ログ
 $ docker compose logs
 # ログの出力を表示しつづける
@@ -83,12 +202,11 @@ $ docker compose logs --timestamps
 # 最終行付近
 $ docker compose logs --tail
 # サービス指定
-$ docker compose logs -f -t --tail --no-color <service>
+$ docker compose logs -f --no-color <service>
 
-# docker-compose up で起動しているコンテナでコマンドを実行
-$ docker compose exec <service> bash
-# コンテナを新たに起動して実行する
-$ docker compose run <service> bash
+# Database
+$ docker compose exec db bash -c 'mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_DATABASE'
+$ docker compose exec db bash -c 'PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p 5432 -U $DB_USER'
 ```
 
 <br><br>
