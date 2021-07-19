@@ -25,6 +25,7 @@ Docker Compose
       - [コンテナを新たに起動してコマンドを実行する（run）](#コンテナを新たに起動してコマンドを実行するrun)
     - [コンテナを停止し、 docker compose up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除（down）](#コンテナを停止し-docker-compose-up-で作成したコンテナ・ネットワーク・ボリューム・イメージを削除down)
     - [ログを表示（logs）](#ログを表示logs)
+      - [ポートを確認する（port）](#ポートを確認するport)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -330,6 +331,22 @@ $ docker compose logs --timestamps
 $ docker compose logs --tail
 # サービス指定
 $ docker compose logs -f --no-color <service>
+```
+
+<br><br>
+
+<a id="markdown-ポートを確認するport" name="ポートを確認するport"></a>
+
+#### ポートを確認する（port）
+
+```bash
+# docker compose port <service> <port number>
+$ docker compose -f ./compose/nginx/docker-compose.yml up -d
+$ docker compose -f ./compose/nginx/docker-compose.yml port nginx 80
+```
+
+```
+0.0.0.0:80
 ```
 
 <br><br>
