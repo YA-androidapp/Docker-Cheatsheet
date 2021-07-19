@@ -12,6 +12,19 @@ Docker Compose
 
 - [Docker-Cheatsheet](#docker-cheatsheet)
   - [基本的なコマンド](#基本的なコマンド)
+    - [バージョン確認（version）](#バージョン確認version)
+    - [docker-compose.yml の内容を表示（config）](#docker-composeyml-の内容を表示config)
+    - [サービスを構築（build）](#サービスを構築build)
+    - [構築、作成、起動、アタッチ（up）](#構築作成起動アタッチup)
+      - [Docker Compose でスケール＋ロードバランシング（up --scale）](#docker-compose-でスケール＋ロードバランシングup---scale)
+    - [コンテナ一覧（ps）](#コンテナ一覧ps)
+      - [ID のみ](#id-のみ)
+    - [コンテナでコマンドを実行](#コンテナでコマンドを実行)
+      - [docker compose up で起動しているコンテナでコマンドを実行（exec）](#docker-compose-up-で起動しているコンテナでコマンドを実行exec)
+        - [データベースアクセスなど](#データベースアクセスなど)
+      - [コンテナを新たに起動してコマンドを実行する（run）](#コンテナを新たに起動してコマンドを実行するrun)
+    - [コンテナを停止し、 docker compose up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除（down）](#コンテナを停止し-docker-compose-up-で作成したコンテナ・ネットワーク・ボリューム・イメージを削除down)
+    - [ログを表示（logs）](#ログを表示logs)
   - [参考文献](#参考文献)
 
 <!-- /TOC -->
@@ -22,8 +35,11 @@ Docker Compose
 
 ## 基本的なコマンド
 
+<a id="markdown-バージョン確認version" name="バージョン確認version"></a>
+
+### バージョン確認（version）
+
 ```bash
-# バージョン確認
 $ docker-compose version
 ```
 
@@ -39,10 +55,13 @@ OpenSSL version: OpenSSL 1.1.1h  22 Sep 2020
 
 </details>
 
-<br>
+<br><br>
+
+<a id="markdown-docker-composeyml-の内容を表示config" name="docker-composeyml-の内容を表示config"></a>
+
+### docker-compose.yml の内容を表示（config）
 
 ```bash
-# docker-compose.yml の内容を表示
 $ docker compose --file ./compose/nginx/docker-compose.yml config
 ```
 
@@ -74,19 +93,25 @@ networks:
 
 </details>
 
-<br>
+<br><br>
+
+<a id="markdown-サービスを構築build" name="サービスを構築build"></a>
+
+### サービスを構築（build）
 
 ```bash
-# サービスを構築
 # docker compose build --build-arg key=val --force-rm --no-cache --pull
 # docker compose build --build-arg key=val --force-rm --no-cache --pull <service>
 $ docker compose -f ./compose/nginx/docker-compose.yml build
 ```
 
-<br>
+<br><br>
+
+<a id="markdown-構築作成起動アタッチup" name="構築作成起動アタッチup"></a>
+
+### 構築、作成、起動、アタッチ（up）
 
 ```bash
-# 構築、作成、起動、アタッチ
 # docker compose up -d --build --force-recreate
 # docker compose up -d --build --force-recreate <service>
 $ docker compose -f ./compose/nginx/docker-compose.yml up -d
@@ -111,9 +136,11 @@ $ docker compose -f ./compose/nginx/docker-compose.yml up -d
 
 </details>
 
-<br>
+<br><br>
 
-Docker Compose でスケール＋ロードバランシング
+<a id="markdown-docker-compose-でスケール＋ロードバランシングup---scale" name="docker-compose-でスケール＋ロードバランシングup---scale"></a>
+
+#### Docker Compose でスケール＋ロードバランシング（up --scale）
 
 <details>
     <summary>Commands</summary>
@@ -170,10 +197,13 @@ $ COMPOSE_PROJECT_NAME=loadbalancer docker compose -f ./compose/scale/docker-com
 
 </details>
 
-<br>
+<br><br>
+
+<a id="markdown-コンテナ一覧ps" name="コンテナ一覧ps"></a>
+
+### コンテナ一覧（ps）
 
 ```bash
-# コンテナ一覧
 # docker compose ps
 $ docker compose -f ./compose/nginx/docker-compose.yml ps
 ```
@@ -190,8 +220,11 @@ nginx               nginx               running             0.0.0.0:80->80/tcp, 
 
 <br>
 
+<a id="markdown-id-のみ" name="id-のみ"></a>
+
+#### ID のみ
+
 ```bash
-# IDのみ
 # docker compose ps -q
 $ docker compose -f ./compose/nginx/docker-compose.yml ps -q
 ```
@@ -205,10 +238,17 @@ $ docker compose -f ./compose/nginx/docker-compose.yml ps -q
 
 </details>
 
-<br>
+<br><br>
+
+<a id="markdown-コンテナでコマンドを実行" name="コンテナでコマンドを実行"></a>
+
+### コンテナでコマンドを実行
+
+<a id="markdown-docker-compose-up-で起動しているコンテナでコマンドを実行exec" name="docker-compose-up-で起動しているコンテナでコマンドを実行exec"></a>
+
+#### docker compose up で起動しているコンテナでコマンドを実行（exec）
 
 ```bash
-# docker-compose up で起動しているコンテナでコマンドを実行
 # docker compose exec <service> bash
 $ docker compose -f ./compose/nginx/docker-compose.yml exec nginx bash
 root@69ee177813c0:/# exit
@@ -217,13 +257,31 @@ $ docker compose --file ./compose/nginx/docker-compose.yml ps
 NAME                SERVICE             STATUS              PORTS
 nginx               nginx               running             0.0.0.0:80->80/tcp, :::80->80/tcp
 
-# 停止
+# 残ったコンテナを停止
 $ docker compose -f ./compose/nginx/docker-compose.yml stop
 [+] Running 2/2
  ⠿ Container nginx_nginx_run_dfe0eb2265c9  Stopped                                                                                        0.0s
  ⠿ Container nginx                         Stopped                                                                                        1.2s
+```
 
-# コンテナを新たに起動してコマンドを実行する
+<br>
+
+<a id="markdown-データベースアクセスなど" name="データベースアクセスなど"></a>
+
+##### データベースアクセスなど
+
+```bash
+$ docker compose exec db bash -c 'mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_DATABASE'
+$ docker compose exec db bash -c 'PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p 5432 -U $DB_USER'
+```
+
+<br><br>
+
+<a id="markdown-コンテナを新たに起動してコマンドを実行するrun" name="コンテナを新たに起動してコマンドを実行するrun"></a>
+
+#### コンテナを新たに起動してコマンドを実行する（run）
+
+```bash
 # docker compose run <service> bash
 $ docker compose -f ./compose/nginx/docker-compose.yml run nginx bash
 root@c77ae496cb52:/# exit
@@ -233,10 +291,13 @@ NAME                SERVICE             STATUS              PORTS
 nginx               nginx               exited (0)
 ```
 
-<br>
+<br><br>
+
+<a id="markdown-コンテナを停止し-docker-compose-up-で作成したコンテナ・ネットワーク・ボリューム・イメージを削除down" name="コンテナを停止し-docker-compose-up-で作成したコンテナ・ネットワーク・ボリューム・イメージを削除down"></a>
+
+### コンテナを停止し、 docker compose up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除（down）
 
 ```bash
-# コンテナを停止し、 up で作成したコンテナ・ネットワーク・ボリューム・イメージを削除
 $ docker compose down
     # Composeファイル内で定義したサービス用のコンテナ
     # Composeファイルの networkセクションで定義したネットワーク
@@ -249,8 +310,15 @@ $ docker compose down --remove-orphans
     # Compose ファイルで定義していないサービス用のコンテナも削除
 $ docker compose down --rmi all --volumes --remove-orphans
     # すべて削除
+```
 
-# ログ
+<br><br>
+
+<a id="markdown-ログを表示logs" name="ログを表示logs"></a>
+
+### ログを表示（logs）
+
+```bash
 $ docker compose logs
 # ログの出力を表示しつづける
 $ docker compose logs -f
@@ -262,10 +330,6 @@ $ docker compose logs --timestamps
 $ docker compose logs --tail
 # サービス指定
 $ docker compose logs -f --no-color <service>
-
-# Database
-$ docker compose exec db bash -c 'mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_DATABASE'
-$ docker compose exec db bash -c 'PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p 5432 -U $DB_USER'
 ```
 
 <br><br>
