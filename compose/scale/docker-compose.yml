@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  web:
+    image: nginx:alpine
+
+  loadbalancer:
+    image: haproxy:alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - web

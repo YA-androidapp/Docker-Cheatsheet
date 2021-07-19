@@ -113,6 +113,65 @@ $ docker compose -f ./compose/nginx/docker-compose.yml up -d
 
 <br>
 
+Docker Compose でスケール＋ロードバランシング
+
+<details>
+    <summary>Commands</summary>
+
+```yaml
+# docker-compose.yml
+
+version: "3"
+
+services:
+  web:
+    image: nginx:alpine
+
+  loadbalancer:
+    image: haproxy:alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - web
+```
+
+<br>
+
+```
+# haproxy.cfg
+
+defaults
+    timeout connect 5s
+    timeout client 5s
+    timeout server 30s
+
+frontend web_proxy
+    bind *:80
+    use_backend web-server
+
+backend web-server
+    balance roundrobin
+
+    server web1 loadbalancer_web_1:80 check inter 2s
+    server web2 loadbalancer_web_2:80 check inter 2s
+    server web3 loadbalancer_web_3:80 check inter 2s
+
+    mode http
+    option forwardfor
+```
+
+<br>
+
+```bash
+$ COMPOSE_PROJECT_NAME=loadbalancer docker compose -f ./compose/scale/docker-compose.yml up --scale web=3
+```
+
+</details>
+
+<br>
+
 ```bash
 # コンテナ一覧
 # docker compose ps
