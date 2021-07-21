@@ -19,7 +19,7 @@ Docker Compose
       - [Docker Compose でスケール＋ロードバランシング（up --scale）](#docker-compose-でスケール＋ロードバランシングup---scale)
         - [Nginx のみ利用](#nginx-のみ利用)
         - [haproxy イメージを利用](#haproxy-イメージを利用)
-    - [コンテナ一覧（ps）](#コンテナ一覧ps)
+    - [コンテナ一覧（ps）・プロセス一覧（top）](#コンテナ一覧ps・プロセス一覧top)
       - [ID のみ](#id-のみ)
     - [コンテナでコマンドを実行](#コンテナでコマンドを実行)
       - [docker compose up で起動しているコンテナでコマンドを実行（exec）](#docker-compose-up-で起動しているコンテナでコマンドを実行exec)
@@ -260,21 +260,46 @@ $ COMPOSE_PROJECT_NAME=loadbalancer docker compose -f ./compose/scale/haproxy/do
 
 <br><br>
 
-<a id="markdown-コンテナ一覧ps" name="コンテナ一覧ps"></a>
+<a id="markdown-コンテナ一覧ps・プロセス一覧top" name="コンテナ一覧ps・プロセス一覧top"></a>
 
-### コンテナ一覧（ps）
+### コンテナ一覧（ps）・プロセス一覧（top）
 
 ```bash
+# 予めコンテナを起動しておく
+# docker compose -f ./compose/nginx/docker-compose.yml up -d
+
 # docker compose ps
 $ docker compose -f ./compose/nginx/docker-compose.yml ps
+
+# docker compose top
+# $ docker compose -f ./compose/nginx/docker-compose.yml top # ← --file オプションを指定すると結果を取得できない
+$ cd ./compose/nginx # 一旦 docker-compose.yml と同じ階層に cd
+$ docker compose top
+$ cd ../../
 ```
 
 <details>
     <summary>Results</summary>
 
 ```
+# docker compose ps
+
 NAME                SERVICE             STATUS              PORTS
 nginx               nginx               running             0.0.0.0:80->80/tcp, :::80->80/tcp
+```
+
+<br>
+
+```
+# docker compose top
+
+nginx
+UID     PID     PPID    C    STIME   TTY   TIME       CMD
+root    20256   20230   0    03:37   ?     00:00:00   nginx: master process nginx -g daemon off;
+uuidd   20469   20256   0    03:38   ?     00:00:00   nginx: worker process
+uuidd   20470   20256   0    03:38   ?     00:00:00   nginx: worker process
+uuidd   20471   20256   0    03:38   ?     00:00:00   nginx: worker process
+uuidd   20472   20256   0    03:38   ?     00:00:00   nginx: worker process
 ```
 
 </details>
