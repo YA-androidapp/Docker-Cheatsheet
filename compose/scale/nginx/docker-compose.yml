@@ -1,0 +1,12 @@
+version: "3"
+services:
+  web:
+    image: nginx
+
+  loadbalancer:
+    image: nginx
+    container_name: loadbalancer
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+    ports:
+      - 80:80

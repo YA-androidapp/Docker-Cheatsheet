@@ -17,6 +17,8 @@ Docker Compose
     - [サービスを構築（build）](#サービスを構築build)
     - [構築、作成、起動、アタッチ（up）](#構築作成起動アタッチup)
       - [Docker Compose でスケール＋ロードバランシング（up --scale）](#docker-compose-でスケール＋ロードバランシングup---scale)
+        - [Nginx のみ利用](#nginx-のみ利用)
+        - [haproxy イメージを利用](#haproxy-イメージを利用)
     - [コンテナ一覧（ps）](#コンテナ一覧ps)
       - [ID のみ](#id-のみ)
     - [コンテナでコマンドを実行](#コンテナでコマンドを実行)
@@ -143,6 +145,64 @@ $ docker compose -f ./compose/nginx/docker-compose.yml up -d
 
 #### Docker Compose でスケール＋ロードバランシング（up --scale）
 
+<a id="markdown-nginx-のみ利用" name="nginx-のみ利用"></a>
+
+##### Nginx のみ利用
+
+<details>
+    <summary>Commands</summary>
+
+```yaml
+# docker-compose.yml
+
+version: "3"
+services:
+  web:
+    image: nginx
+
+  loadbalancer:
+    image: nginx
+    container_name: loadbalancer
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+    ports:
+      - 80:80
+```
+
+<br>
+
+```
+# nginx.conf
+
+upstream loadbalancer {
+    server nginx_web_1;
+    server nginx_web_2;
+}
+
+server {
+    listen      80;
+    location / {
+        proxy_pass http://loadbalancer;
+    }
+}
+```
+
+<br>
+
+```bash
+$ docker compose -f ./compose/scale/nginx/docker-compose.yml up --scale web=3
+
+$ docker-compose -f ./compose/scale/nginx/docker-compose.yml logs -f web
+```
+
+</details>
+
+<br><br>
+
+<a id="markdown-haproxy-イメージを利用" name="haproxy-イメージを利用"></a>
+
+##### haproxy イメージを利用
+
 <details>
     <summary>Commands</summary>
 
@@ -193,7 +253,7 @@ backend web-server
 <br>
 
 ```bash
-$ COMPOSE_PROJECT_NAME=loadbalancer docker compose -f ./compose/scale/docker-compose.yml up --scale web=3
+$ COMPOSE_PROJECT_NAME=loadbalancer docker compose -f ./compose/scale/haproxy/docker-compose.yml up --scale web=3
 ```
 
 </details>
